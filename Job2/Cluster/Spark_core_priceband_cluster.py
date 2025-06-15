@@ -3,14 +3,13 @@ from io import StringIO
 import re
 import time
 import os
-import sys  # Importa sys per output su stderr/stdout del driver
+import sys  
 
 # Importa solo SparkSession, SparkContext è ottenuto da essa.
 from pyspark.sql import SparkSession
 
 # --- Configurazione per Cluster EMR ---
-# Su EMR, i percorsi devono essere S3, non locali.
-# Assicurati che i tuoi file puliti siano stati caricati in S3.
+
 S3_CLEANED_INPUT_BASE_PATH = "s3://bucketpoggers2/input/"
 
 # Il file di log e il file dei tempi verranno generati localmente sul nodo master EMR
@@ -19,10 +18,10 @@ LOCAL_LOG_DIR = "/home/hadoop/spark_logs_city_priceband_rdd/"  # Directory sul n
 LOCAL_LOG_FILE = os.path.join(LOCAL_LOG_DIR, "spark_core_city_priceband_rdd_only.txt")
 LOCAL_TIMES_FILE_ON_EMR = os.path.join(LOCAL_LOG_DIR, "spark_core_city_priceband_rdd_only_times.txt")
 
-# Assicurati che la directory di log esista sul nodo driver EMR
+
 os.makedirs(LOCAL_LOG_DIR, exist_ok=True)
 
-# ⚡ Inizializza SparkSession. Senza configurazioni esplicite.
+# Inizializza SparkSession. Senza configurazioni esplicite.
 # Spark userà le configurazioni di default del cluster EMR.
 spark = SparkSession.builder \
     .appName("SparkCityPriceBandRDDCluster") \
@@ -33,7 +32,6 @@ spark.sparkContext.setLogLevel("ERROR")
 sc = spark.sparkContext  # Ottieni lo SparkContext per le operazioni RDD
 
 # Definizione dei dataset (nomi file S3 e etichette per il grafico)
-# I percorsi sono ora relativi alla S3_CLEANED_INPUT_BASE_PATH
 datasets = [
     ('used_cars_data_sampled_1.csv', '10%'),
     ('used_cars_data_sampled_2.csv', '20%'),
@@ -45,7 +43,7 @@ datasets = [
     ('used_cars_data_sampled_8.csv', '80%'),
     ('used_cars_data_sampled_9.csv', '90%'),
     ('used_cars_data.csv', '100%'),
-    ('used_cars_data_1_5x.csv', '150%'),  # Aggiunto 1.5x dal precedente se vuoi mantenerlo
+    ('used_cars_data_1_5x.csv', '150%'),  
     ('used_cars_data_2x.csv', '200%')
 ]
 

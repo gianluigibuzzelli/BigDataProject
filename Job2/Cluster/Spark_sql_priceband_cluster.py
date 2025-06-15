@@ -6,7 +6,6 @@ import sys  # Importa sys per output su stderr/stdout del driver
 
 
 # --- Configurazione per Cluster EMR ---
-# Su EMR, i percorsi devono essere S3, non locali.
 S3_INPUT_BASE_PATH = "s3://bucketpoggers2/input/"  # Assicurati che i tuoi file siano qui
 
 # Il file di log e il file dei tempi verranno generati localmente sul nodo master EMR
@@ -17,7 +16,7 @@ LOCAL_TIMES_FILE_ON_EMR = os.path.join(LOCAL_LOG_DIR, "spark_sql_city_priceband_
 # Assicurati che la directory di log esista sul nodo driver EMR
 os.makedirs(LOCAL_LOG_DIR, exist_ok=True)
 
-# 🔧 Impostazioni
+
 # I percorsi sono ora relativi alla S3_INPUT_BASE_PATH
 datasets = [
     ('used_cars_data_sampled_1.csv', '10%'),
@@ -30,10 +29,13 @@ datasets = [
     ('used_cars_data_sampled_8.csv', '80%'),
     ('used_cars_data_sampled_9.csv', '90%'),
     ('used_cars_data.csv', '100%'),
-    ('used_cars_data_2x.csv', '200%')
+    ("used_cars_data_1_25x.csv 125%"),
+    ("used_cars_data_1_5x.csv 150%"),
+    ('used_cars_data_2x.csv', '200%'),
+    ('used_cars_data_4x.csv', '400%')
 ]
 
-# ⚡ Inizializza SparkSession. Senza configurazioni esplicite.
+#Inizializza SparkSession. Senza configurazioni esplicite.
 # Spark userà le configurazioni di default del cluster EMR.
 spark = SparkSession.builder \
     .appName("CityYearPriceBandBenchmarkCluster") \

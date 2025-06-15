@@ -6,7 +6,7 @@ import sys  # Importa sys per output su stderr/stdout del driver
 
 # --- Configurazione per Cluster EMR ---
 # Su EMR, i percorsi devono essere S3, non locali.
-S3_INPUT_BASE_PATH = "s3://bucketpoggers2/input/"  # Assicurati che i tuoi file siano qui
+S3_INPUT_BASE_PATH = "s3://bucketpoggers2/input/"  
 
 # Il file di log e il file dei tempi verranno generati localmente sul nodo master EMR
 LOCAL_LOG_DIR = "/home/hadoop/spark_logs_sql_make_model/"  # Directory sul nodo master EMR per i log temporanei

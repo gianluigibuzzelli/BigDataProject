@@ -70,8 +70,6 @@ def get_header(input_stream):
 
 if __name__ == "__main__":
     # La prima riga dell'input è l'header. Deve essere saltata.
-    # Se il tuo input è garantito essere senza header, puoi rimuovere questa parte.
-    # sys.stdin è uno stream di righe.
     is_header = True
     header_fields = []
 
@@ -80,7 +78,7 @@ if __name__ == "__main__":
             # Parsa l'header per ottenere i nomi delle colonne
             header_fields = next(csv.reader(StringIO(line.strip())))
             is_header = False
-            continue  # Salta l'header, non lo processiamo come dato
+            continue  # Salta l'header
 
         try:
             # Usa csv.reader per parsare la riga corrente
@@ -97,8 +95,6 @@ if __name__ == "__main__":
                 # Chiave: (make_name, model_name)
                 key = (cleaned_row['make_name'], cleaned_row['model_name'])
                 # Valore: (count, min_price, max_price, sum_price, year)
-                # In questa fase, min, max, sum sono tutti il prezzo corrente.
-                # L'anno viene aggiunto come singolo elemento per il set nella fase di reduce.
                 value = (1, cleaned_row['price'], cleaned_row['price'], cleaned_row['price'], cleaned_row['year'])
 
                 # Stampa la coppia chiave-valore nel formato richiesto da Hadoop Streaming:

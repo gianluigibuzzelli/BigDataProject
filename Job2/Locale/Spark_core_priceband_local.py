@@ -5,7 +5,7 @@ import time
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-from pyspark.sql import SparkSession  # Mantenuto solo per inizializzare SparkSession, non per DataFrames
+from pyspark.sql import SparkSession  
 
 SPARK_LOCAL_DIR = "/media/gianluigi/Z Slim/Spark_tmp"
 os.makedirs(SPARK_LOCAL_DIR, exist_ok=True)  # Crea la directory se non esiste
@@ -22,21 +22,21 @@ spark_configs = {
 
 # La lista dei dataset è stata aggiornata per puntare ai file puliti nella directory 'cleaned'
 datasets = [
-    ('/media/gianluigi/Z Slim/DownloadUbuntu/cleaned/used_cars_data_sampled_1_cleaned.csv', '10%'),
-    ('/media/gianluigi/Z Slim/DownloadUbuntu/cleaned/used_cars_data_sampled_2_cleaned.csv', '20%'),
-    ('/media/gianluigi/Z Slim/DownloadUbuntu/cleaned/used_cars_data_sampled_3_cleaned.csv', '30%'),
-    ('/media/gianluigi/Z Slim/DownloadUbuntu/cleaned/used_cars_data_sampled_4_cleaned.csv', '40%'),
-    ('/media/gianluigi/Z Slim/DownloadUbuntu/cleaned/used_cars_data_sampled_5_cleaned.csv', '50%'),
-    ('/media/gianluigi/Z Slim/DownloadUbuntu/cleaned/used_cars_data_sampled_6_cleaned.csv', '60%'),
-    ('/media/gianluigi/Z Slim/DownloadUbuntu/cleaned/used_cars_data_sampled_7_cleaned.csv', '70%'),
-    ('/media/gianluigi/Z Slim/DownloadUbuntu/cleaned/used_cars_data_sampled_8_cleaned.csv', '80%'),
-    ('/media/gianluigi/Z Slim/DownloadUbuntu/cleaned/used_cars_data_sampled_9_cleaned.csv', '90%'),
-    ('/media/gianluigi/Z Slim/DownloadUbuntu/cleaned/used_cars_data_cleaned.csv', '100%'),
-    ('/media/gianluigi/Z Slim/DownloadUbuntu/cleaned/used_cars_data_1_25x_cleaned.csv', '125%'),
-    ('/media/gianluigi/Z Slim/DownloadUbuntu/cleaned/used_cars_data_2x_cleaned.csv', '200%')
+    ('/media/gianluigi/Z Slim/DownloadUbuntu/archive/used_cars_data_sampled_1.csv', '10%'),
+    ('/media/gianluigi/Z Slim/DownloadUbuntu/archive/used_cars_data_sampled_2.csv', '20%'),
+    ('/media/gianluigi/Z Slim/DownloadUbuntu/archive/used_cars_data_sampled_3.csv', '30%'),
+    ('/media/gianluigi/Z Slim/DownloadUbuntu/archive/used_cars_data_sampled_4.csv', '40%'),
+    ('/media/gianluigi/Z Slim/DownloadUbuntu/archive/used_cars_data_sampled_5.csv', '50%'),
+    ('/media/gianluigi/Z Slim/DownloadUbuntu/archive/used_cars_data_sampled_6.csv', '60%'),
+    ('/media/gianluigi/Z Slim/DownloadUbuntu/archive/used_cars_data_sampled_7.csv', '70%'),
+    ('/media/gianluigi/Z Slim/DownloadUbuntu/archive/used_cars_data_sampled_8.csv', '80%'),
+    ('/media/gianluigi/Z Slim/DownloadUbuntu/archive/used_cars_data_sampled_9.csv', '90%'),
+    ('/media/gianluigi/Z Slim/DownloadUbuntu/archive/used_cars_data.csv', '100%'),
+    ('/media/gianluigi/Z Slim/DownloadUbuntu/archive/used_cars_data_1_25x.csv', '125%'),
+    ('/media/gianluigi/Z Slim/DownloadUbuntu/archive/used_cars_data_2x.csv', '200%')
 ]
 
-# ⚡ Inizializza SparkSession con le configurazioni ottimizzate
+# Inizializza SparkSession con le configurazioni ottimizzate
 spark_builder = SparkSession.builder \
     .appName("AverageSparkCoreRDDOnly")  # Nome dell'applicazione modificato
 
@@ -82,7 +82,6 @@ def parse_and_filter_csv_line(line: str, header_map: dict):
     """
     try:
         # Usa csv.reader per gestire robustamente le virgolette e i delimitatori
-        # Si assume che i file "puliti" siano ben formattati per csv.reader
         reader = csv.reader(StringIO(line), delimiter=',', doublequote=True, strict=True)
         fields = next(reader)
 

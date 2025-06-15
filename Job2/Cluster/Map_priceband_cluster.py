@@ -15,7 +15,7 @@ city_pattern = re.compile(r"^[A-Za-zÀ-ÖØ-öø-ÿ'\- ]{1,50}$")
 word_pattern = re.compile(r"\b[a-zA-Z]{2,}\b")  # Trova solo parole di almeno 2 caratteri
 
 # La prima riga dell'input è l'header. Deve essere saltata.
-# In Hadoop Streaming, ogni riga viene passata al mapper.
+
 is_header = True
 header_fields = []
 

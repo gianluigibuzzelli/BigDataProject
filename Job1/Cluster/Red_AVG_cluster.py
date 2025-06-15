@@ -63,7 +63,7 @@ if __name__ == "__main__":
         except Exception as e:
             sys.stderr.write(f"Errore nel reducer sulla riga: {line.strip()}. Errore: {e}\n")
 
-    # Non dimenticare di elaborare e stampare l'ultima chiave dopo il ciclo
+    # Elaborare e stampare l'ultima chiave dopo il ciclo
     if current_key:
         avg_price = round(accumulated_stats[3] / accumulated_stats[0], 2)
         sorted_years = sorted(list(accumulated_stats[4]))

@@ -5,12 +5,11 @@ import time
 import os
 import matplotlib.pyplot as plt
 import numpy as np  # Necessario per np.nan
-
 from pyspark import SparkContext
-from pyspark.sql import SparkSession  # Mantenuto solo per inizializzare SparkSession
+from pyspark.sql import SparkSession  # Per inizializzare SparkSession
 
 # --- Configurazione per Esecuzione Locale ---
-# Le directory locali devono esistere
+
 SPARK_LOCAL_DIR = "/media/gianluigi/Z Slim/Spark_tmp"
 os.makedirs(SPARK_LOCAL_DIR, exist_ok=True)
 
@@ -40,7 +39,7 @@ datasets = [
     ('/media/gianluigi/Z Slim/DownloadUbuntu/archive/used_cars_data_1_25x.csv', '125%')
 ]
 
-# ⚡ Inizializza SparkSession con le configurazioni ottimizzate
+#Inizializza SparkSession con le configurazioni ottimizzate
 spark_builder = SparkSession.builder \
     .appName("SimilaritySparkCoreRDDOnlyLocal")
 
@@ -147,12 +146,8 @@ def parse_and_filter_csv_line(line: str, header_map: dict):
         return (model_name, horsepower, engine_displacement, price)
 
     except (csv.Error, IndexError, StopIteration, ValueError) as e:
-        # Per debugging, puoi decommentare
-        # print(f"Parsing error for line: {line.strip()}. Error: {e}", file=sys.stderr)
         return None
     except Exception as e:
-        # Per debugging, puoi decommentare
-        # print(f"Unexpected error for line: {line.strip()}. Error: {e}", file=sys.stderr)
         return None
 
 
@@ -215,7 +210,6 @@ with open(log_file, "w", encoding="utf-8") as fout:
         )).cache()
 
         # ---- 6) Calcola model_feat: [(model, (avg_hp, avg_ed))] ----
-        # Questo RDD viene collectato al driver. Punto critico di scalabilità.
         mf_collected_list = (rdd_model_raw_data
                              .map(lambda x: (x[0], (x[1][0], x[1][1], 1)))  # (model, (sum_hp, sum_ed, count))
                              .reduceByKey(lambda a, b: (a[0] + b[0], a[1] + b[1], a[2] + b[2]))

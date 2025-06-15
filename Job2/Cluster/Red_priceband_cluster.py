@@ -20,8 +20,6 @@ if __name__ == "__main__":
             key_str, value_str = line.split('\t', 1)
 
             # Parsa la chiave
-            # Non è strettamente necessario ri-parsare i componenti della chiave qui
-            # ma è buona pratica per chiarezza se volessi riutilizzarli.
             # city, year, band = key_str.split(',') # non usati direttamente qui ma utili per debug
 
             value_parts = value_str.split(',')
@@ -44,7 +42,6 @@ if __name__ == "__main__":
             continue
 
     # Dopo aver processato tutte le righe, calcoliamo e stampiamo i risultati finali
-    # Ordina le chiavi per garantire un output consistente
     sorted_keys = sorted(stats_agg.keys())
 
     for key_str in sorted_keys:

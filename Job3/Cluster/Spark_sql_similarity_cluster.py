@@ -18,7 +18,6 @@ LOCAL_TIMES_FILE_ON_EMR = os.path.join(LOCAL_LOG_DIR, "model_similarity_exec_tim
 # Assicurati che la directory di log esista sul nodo driver EMR
 os.makedirs(LOCAL_LOG_DIR, exist_ok=True)
 
-# 🔧 Impostazioni
 # I percorsi sono ora relativi alla S3_INPUT_BASE_PATH
 datasets = [
     ('used_cars_data_sampled_1.csv', '10%'),
@@ -34,7 +33,7 @@ datasets = [
     ('used_cars_data_2x.csv', '200%')
 ]
 
-# ⚡ Inizializza SparkSession. Senza configurazioni esplicite.
+#Inizializza SparkSession. Senza configurazioni esplicite.
 # Spark userà le configurazioni di default del cluster EMR.
 spark = SparkSession.builder \
     .appName("ModelSimilarityEngineCluster") \

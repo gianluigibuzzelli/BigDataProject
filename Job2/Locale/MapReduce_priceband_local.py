@@ -25,7 +25,7 @@ datasets = [
 ]
 
 
-CHUNK_SIZE = 50_000  # Ho ridotto il CHUNK_SIZE per maggiore sicurezza
+CHUNK_SIZE = 50_000  
 
 # Colonne essenziali e numeriche (usate per la pulizia dei dati)
 essential = ['make_name', 'model_name', 'horsepower', 'engine_displacement']
@@ -33,14 +33,13 @@ int_cols = ['daysonmarket', 'dealer_zip', 'listing_id', 'owner_count', 'maximum_
 
 # Percorsi di output
 output_dir = "/media/gianluigi/Z Slim/Risultati_locale/"
-os.makedirs(output_dir, exist_ok=True)  # Assicurati che la directory esista
+os.makedirs(output_dir, exist_ok=True)  
 
 # Nomi dei file di log e grafico
 log_file = os.path.join(output_dir, "priceband_mapreduce.txt")
 graph_file = os.path.join(output_dir, "priceband_mapreduce.png")
 
 # Directory temporanea per i file di spill delle word_counts
-# Assicurati che sia su un disco con molto spazio libero
 TEMP_WORD_COUNTS_BASE_DIR = os.path.join(output_dir, "temp_model_data_spill")
 os.makedirs(TEMP_WORD_COUNTS_BASE_DIR, exist_ok=True)  # Crea la directory base se non esiste
 

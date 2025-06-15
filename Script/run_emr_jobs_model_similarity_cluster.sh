@@ -34,8 +34,11 @@ DATASETS=(
     "used_cars_data_sampled_8.csv 80%"
     "used_cars_data_sampled_9.csv 90%"
     "used_cars_data.csv 100%"
+    "used_cars_data_1_25x.csv 125%"
     "used_cars_data_1_5x.csv 150%"
     "used_cars_data_2x.csv 200%"
+    "used_cars_data_4x.csv 400%"
+
 )
 
 # File locale dove verranno salvati i tempi di esecuzione per il grafico

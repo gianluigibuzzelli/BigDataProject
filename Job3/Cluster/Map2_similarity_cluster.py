@@ -38,7 +38,7 @@ if 'HADOOP_STREAMING_JAR' in os.environ:
         sys.stderr.write(f"Mapper 2: Loaded {len(all_model_features)} models from distributed cache.\n")
     except Exception as e:
         sys.stderr.write(f"Mapper 2: Error loading distributed cache: {e}\n")
-        # In un ambiente di produzione, qui si potrebbe voler terminare il task per errore.
+ 
 
 # Il mapper riceve l'output della Fase 1 come input riga per riga.
 # Per ogni modello di input, lo confronta con tutti i modelli dalla cache.
@@ -53,7 +53,6 @@ for line in sys.stdin:
         current_hp, current_ed, current_price = map(float, current_values_str.split(','))
 
         # Confronta il modello corrente con tutti i modelli caricati dalla Distributed Cache.
-        # Questo è il cuore della logica O(N^2) (ma qui è O(N*M) dove N è l'input del mapper e M sono i dati della cache).
         # Per assicurare che ogni coppia sia emessa una sola volta (M1,M2 vs M2,M1), ordiniamo i nomi.
         for other_model_name, (other_hp, other_ed, other_price) in all_model_features.items():
             if current_model_name == other_model_name:

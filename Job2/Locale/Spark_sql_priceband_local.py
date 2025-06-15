@@ -33,7 +33,7 @@ datasets = [
     ('/media/gianluigi/Z Slim/DownloadUbuntu/archive/used_cars_data_2x.csv', '200%')
 ]
 
-# ⚡ Inizializza SparkSession con le configurazioni ottimizzate
+#Inizializza SparkSession con le configurazioni ottimizzate
 spark_builder = SparkSession.builder \
     .appName("CityYearPriceBandBenchmarkWithCityClean")
 
@@ -51,7 +51,7 @@ int_cols = ['daysonmarket', 'dealer_zip', 'listing_id', 'owner_count', 'maximum_
 exec_times = []
 labels = []
 
-# 🔸 Prepara directory e file di output
+# Prepara directory e file di output
 os.makedirs("/media/gianluigi/Z Slim/Risultati_locale", exist_ok=True)
 output_txt = "/media/gianluigi/Z Slim/Risultati_locale/spark_sql_city_priceband_results.txt"
 graph_path = "/media/gianluigi/Z Slim/Risultati_locale/spark_sql_city_priceband_exec_times.png"

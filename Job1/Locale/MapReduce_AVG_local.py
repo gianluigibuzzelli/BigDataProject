@@ -76,7 +76,7 @@ with open(log_file,'w') as fout:
                 cnt, mn, mx, sm, yrs = stats[key]
                 cnt+=1; mn=min(mn, cr['price']); mx=max(mx, cr['price']); sm+=cr['price']; yrs.add(cr['year'])
                 stats[key] = [cnt,mn,mx,sm,yrs]
-        # Costruisci risultato ordinato
+       
         result=[]
         for (mk,md), (cnt,mn,mx,sm,yrs) in stats.items():
             result.append((mk,md,cnt,mn,mx,round(sm/cnt,2), sorted(yrs)))

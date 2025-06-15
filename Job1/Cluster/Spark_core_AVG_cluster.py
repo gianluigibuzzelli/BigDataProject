@@ -1,94 +1,148 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import matplotlib.ticker as ticker # Importiamo il modulo ticker
-import os # Importiamo il modulo os per la gestione dei percorsi
+from pyspark.sql import SparkSession
+import time
+import csv
+import os
+import sys
 
-# Funzione per convertire le etichette percentuali in valori numerici
-def parse_percentage_labels(labels):
-    """Converte una lista di stringhe percentuali ('X%') in un array di float (0.X)."""
-    return np.array([float(label.replace('%', '')) / 100.0 for label in labels])
+# --- Configurazione per Cluster EMR ---
+# Su EMR, i percorsi devono essere S3.
+S3_INPUT_BASE_PATH = "s3://bucketpoggers2/input/"
 
-# Dati del primo set: Spark core (Locale)
-labels_set1 = ['10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', '100%', '200%', '400%']
-exec_times_set1 = np.array([5.98, 10.36, 14.0, 17.54, 21.76, 26.33, 31.29, 36.03, 40.15, 47.54, 101.44, 503.21])
+# Gli output finali andranno su S3.
+S3_OUTPUT_BASE_PATH = "s3://bucketpoggers2/output/spark_core_AVG/"
 
-# Dati del secondo set: Spark core (Cluster)
-labels_set2 = ['10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', '100%', '200%', '400%']
-exec_times_set2 = np.array([8.57, 12.23, 15.5, 18.09, 20.03, 22.76, 24.35, 26.21, 28.02, 30.0, 55.12, 105.20])
+# Il file di log e il grafico verranno generati localmente sul nodo master EMR
+# e poi scaricati.
+LOCAL_LOG_DIR = "/home/hadoop/spark_logs_simplified/"  # Directory sul nodo master EMR per i log temporanei
+LOCAL_LOG_FILE = os.path.join(LOCAL_LOG_DIR, "spark_core_model_stats.txt")
+LOCAL_TIMES_FILE_ON_EMR = os.path.join(LOCAL_LOG_DIR, "spark_core_times.txt")
 
-# Convertiamo le etichette in valori numerici per l'asse X
-x_values_set1 = parse_percentage_labels(labels_set1)
-x_values_set2 = parse_percentage_labels(labels_set2)
+# Assicurati che la directory di log esista sul nodo driver EMR
+os.makedirs(LOCAL_LOG_DIR, exist_ok=True)
 
-# Uniamo tutte le etichette uniche per l'asse X e le ordiniamo per visualizzazione
-all_numeric_x_values = np.unique(np.concatenate((x_values_set1, x_values_set2)))
-# Convertiamo i valori numerici unici in stringhe percentuali per le etichette dei tick
-all_x_labels = [f"{int(val * 100)}%" for val in all_numeric_x_values]
+# ⚡ Inizializza SparkSession.
+# Non sono più necessarie le configurazioni esplicite qui, Spark le gestirà.
+spark = SparkSession.builder \
+    .appName("SparkCoreModelStatsClusterSimplified") \
+    .getOrCreate()
 
-# Creazione della figura e degli assi del plot con le dimensioni specificate (8x5 pollici).
-plt.figure(figsize=(8, 5))
+# Imposta il livello di log per avere un output più pulito
+spark.sparkContext.setLogLevel("ERROR")
+sc = spark.sparkContext
 
-# Plot del primo set di dati (Locale)
-plt.plot(x_values_set1, exec_times_set1, marker='o', linestyle='-', color='blue', label='Locale')
+# Definizione dei dataset (nomi file S3 e etichette per il grafico)
+datasets = [
+    ('used_cars_data_sampled_1.csv', '10%'),
+    ('used_cars_data_sampled_2.csv', '20%'),
+    ('used_cars_data_sampled_3.csv', '30%'),
+    ('used_cars_data_sampled_4.csv', '40%'),
+    ('used_cars_data_sampled_5.csv', '50%'),
+    ('used_cars_data_sampled_6.csv', '60%'),
+    ('used_cars_data_sampled_7.csv', '70%'),
+    ('used_cars_data_sampled_8.csv', '80%'),
+    ('used_cars_data_sampled_9.csv', '90%'),
+    ('used_cars_data.csv', '100%'),
+    ('used_cars_data_2x.csv', '200%'),
+    ('used_cars_data_4x.csv', '400%')
+]
 
-# Plot del secondo set di dati (Cluster)
-plt.plot(x_values_set2, exec_times_set2, marker='s', linestyle='--', color='red', label='Cluster') # Marker quadrato e linea tratteggiata per distinguere
+exec_times = []
+labels = []
 
-# Aggiunta di titolo ed etichette agli assi
-plt.title("Confronto Tempi di Esecuzione Job 1 Spark Core (Locale vs Cluster)", fontsize=16)
-plt.xlabel("Sample size", fontsize=13)
-plt.ylabel("Execution time (s)", fontsize=13)
+# 3) Apri file di log sul nodo master EMR
+with open(LOCAL_LOG_FILE, "w", encoding="utf-8") as fout:
+    for file_name, label in datasets:
+        s3_path = S3_INPUT_BASE_PATH + file_name
+        header = f"\n== Dataset {label}: {s3_path} ==\n"
+        sys.stdout.write(header)
+        fout.write(header)
 
-# Configurazione delle etichette dell'asse X per mostrare le percentuali
-# Manteniamo le etichette originali sui tick specificati
-plt.xticks(all_numeric_x_values, all_x_labels, rotation=45, ha='right', fontsize=10)
+        # a) leggi e scarta header
+        rdd = sc.textFile(s3_path)
+        first = rdd.first()
+        data = rdd.filter(lambda row: row != first)
 
-# Impostazione del limite dell'asse Y. Consideriamo il massimo di entrambi i set di dati.
-max_overall_time = max(np.max(exec_times_set1), np.max(exec_times_set2))
-plt.ylim(0, max_overall_time + 10) # Aggiungiamo un margine per chiarezza
 
-# --- Modifiche per una griglia uniforme ---
-# Abilitiamo i minor ticks
-plt.minorticks_on()
+        # b) parsing & filtraggio
+        def parse_line(line):
+            try:
+                fields = next(csv.reader([line]))
+                make = fields[42].strip() if len(fields) > 42 and fields[42] else None
+                model = fields[45].strip() if len(fields) > 45 and fields[45] else None
 
-# Definiamo i locatori per le tacche principali e secondarie sull'asse X
-# Tacche principali ogni 0.2 (20%), tacche secondarie ogni 0.1 (10%)
-plt.gca().xaxis.set_major_locator(ticker.MultipleLocator(0.2))
-plt.gca().xaxis.set_minor_locator(ticker.MultipleLocator(0.1))
+                price_str = fields[48].replace('$', '').replace(',', '').strip() if len(fields) > 48 and fields[
+                    48] else ''
+                price = float(price_str) if price_str else -1.0
 
-# Definiamo i locatori per le tacche principali e secondarie sull'asse Y
-# Tacche principali ogni 50 unità, tacche secondarie ogni 25 unità
-plt.gca().yaxis.set_major_locator(ticker.MultipleLocator(50))
-plt.gca().yaxis.set_minor_locator(ticker.MultipleLocator(25))
+                year_str = fields[65].strip() if len(fields) > 65 and fields[65] else ''
+                year = int(year_str) if year_str else -1
 
-# Aggiungiamo la griglia principale (major grid)
-plt.grid(True, which='major', linestyle='-', linewidth='0.7', color='gray', alpha=0.7)
+                if not make or not model:      return None
+                if price <= 0 or year < 1900 or year > 2025: return None
+                return (make, model, price, year)
+            except Exception as e:
+                sys.stderr.write(f"Error parsing line: {line.strip()}. Error: {e}\n")
+                return None
 
-# Aggiungiamo la griglia secondaria (minor grid)
-# Avrà uno stile diverso (linee tratteggiate) e sarà più chiara per distinguere
-plt.grid(True, which='minor', linestyle=':', linewidth='0.5', color='lightgray', alpha=0.5)
-# --- Fine modifiche griglia ---
 
-# Aggiunta della legenda per identificare le due linee
-plt.legend(fontsize=12)
+        parsed = data.map(parse_line).filter(lambda x: x is not None).cache()
 
-# Ottimizzazione del layout
-plt.tight_layout()
+        # c) prepara KV per reduceByKey
+        kv = parsed.map(lambda x: (
+            (x[0], x[1]),
+            (1, x[2], x[2], x[2], {x[3]})
+        ))
 
-# --- Parte aggiunta per salvare il plot ---
-# Definisci il percorso e il nome del file dove salvare il grafico.
-# Questo percorso è per l'esecuzione locale sul tuo computer.
-output_directory = '/home/gianluigi/CodiciBigData'
-output_filename = 'confronto_tempi_spark_core.png'
-full_path = os.path.join(output_directory, output_filename)
 
-# Crea la directory di output se non esiste
-os.makedirs(output_directory, exist_ok=True)
+        # d) funzione di combinazione
+        def combine(a, b):
+            return (
+                a[0] + b[0],
+                min(a[1], b[1]),
+                max(a[2], b[2]),
+                a[3] + b[3],
+                a[4].union(b[4])
+            )
 
-# Salva il plot nel file specificato
-plt.savefig(full_path)
-print(f"Grafico salvato in: {full_path}")
-# --- Fine parte aggiunta ---
 
-# Mostra il plot (opzionale, se vuoi vederlo anche a schermo)
-plt.show()
+        # e) misura tempo reduceByKey + take
+        start = time.time()
+        aggregated = kv.reduceByKey(combine)
+
+        sample = aggregated.take(10)
+        duration = round(time.time() - start, 2)
+
+        # f) stampa a schermo e log
+        fout.write("Prime 10 risultati aggregati:\n")
+        sys.stdout.write("\nPrime 10 risultati aggregati:\n")
+        for (make, model), stats in sample:
+            count = stats[0]
+            min_p = stats[1]
+            max_p = stats[2]
+            avg_p = round(stats[3] / count, 2) if count > 0 else 0.0
+            years = sorted(list(stats[4]))
+            line = f"make={make} | model={model} | count={count} | min={min_p} | max={max_p} | avg={avg_p} | years={years}"
+            sys.stdout.write(line + "\n")
+            fout.write(line + "\n")
+
+        timing_line = f"Spark Core Aggregation Time: {duration} sec\n"
+        sys.stdout.write(timing_line)
+        fout.write(timing_line)
+
+        exec_times.append(duration)
+        labels.append(label)
+
+        parsed.unpersist()
+
+# Scrivi i tempi di esecuzione in un file separato sul nodo master EMR
+with open(LOCAL_TIMES_FILE_ON_EMR, "w", encoding="utf-8") as tf:
+    for i in range(len(labels)):
+        tf.write(f"{labels[i]} {exec_times[i]}\n")
+
+# 4) Arresta SparkSession
+spark.stop()
+
+sys.stdout.write(f"\n✅ Log delle tabelle salvato in: {LOCAL_LOG_FILE}\n")
+sys.stdout.write(f"✅ Tempi di esecuzione salvati in: {LOCAL_TIMES_FILE_ON_EMR}\n")
+sys.stdout.write(
+    f"Per generare il grafico, scarica '{LOCAL_TIMES_FILE_ON_EMR}' e usa lo script 'generate_graph.py' localmente.\n")

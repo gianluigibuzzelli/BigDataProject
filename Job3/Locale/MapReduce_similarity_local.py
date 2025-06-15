@@ -38,8 +38,8 @@ TEMP_MODEL_DATA_DIR = os.path.join(output_dir, "temp_model_data_spill")
 os.makedirs(TEMP_MODEL_DATA_DIR, exist_ok=True)  # Crea la directory base se non esiste
 
 # Dimensione del chunk per la lettura del CSV.
-# Questo valore è cruciale per il consumo di RAM. SPERIMENTA!
-CHUNK_SIZE = 50_000  # Ho ridotto il CHUNK_SIZE per maggiore sicurezza
+# Questo valore è cruciale per il consumo di RAM.
+CHUNK_SIZE = 50_000  
 
 exec_times = []
 labels = []
@@ -142,9 +142,8 @@ def aggregate_model_data_from_disk(temp_dir):
 
 def generate_similar_pairs(model_features_dict):
     """
-    Generates similar model pairs based on horsepower and engine displacement.
-    Returns a set of unique sorted tuples of (model1, model2).
-    This phase still needs to load all model_features_dict in RAM.
+    Genera coppie di modelli simili basati sulla potenza del motore.
+    Restituisce un insieme ordinate di tuple uniche di (model1,model2). 
     """
     pairs = set()
     model_items = list(model_features_dict.items())  # Convert to list to iterate multiple times
@@ -167,8 +166,8 @@ def generate_similar_pairs(model_features_dict):
 
 def map_explode_groups(groups_dict):
     """
-    Map Phase: Transforms groups into (member, group_name) for joins.
-    Uses a generator.
+    Map Phase: Trasforma i gruppi in (member, group_name) per i join.
+    Usa un generaotre.
     """
     for group_name, members in groups_dict.items():
         for member in members:
@@ -177,8 +176,8 @@ def map_explode_groups(groups_dict):
 
 def reduce_avg_price_by_group(exploded_data, prices_dict):
     """
-    Reduce Phase: Calculates average price for each group.
-    Returns a dictionary {group_name: avg_price}.
+    Reduce Phase: Calcola il prezzo medio per ciascun gruppo.
+    Restituisce un dizionario {group_name: avg_price}.
     """
     group_prices = {}  # {group_name: [list_of_prices]}
     for member, group_name in exploded_data:
@@ -195,8 +194,8 @@ def reduce_avg_price_by_group(exploded_data, prices_dict):
 
 def reduce_top_power_model_by_group(exploded_data, hps_dict):
     """
-    Reduce Phase: Finds the model with the highest horsepower in each group.
-    Returns a dictionary {group_name: top_power_model}.
+    Reduce Phase: Trova il modello con la potenza maggiore per ogni gruppo.
+    Restituisce un dizionario {group_name: top_power_model}.
     """
     group_hps = {}  # {group_name: (current_top_model, current_max_hp)}
     for member, group_name in exploded_data:
@@ -220,7 +219,7 @@ with open(log_file, "w", encoding="utf-8") as fout:
         print(f"\n== Dataset {label}: {path} ==")
 
         # Crea e pulisci la directory temporanea specifica per il dataset corrente
-        # Usiamo il label per il nome della directory (es. "10%")
+        # Usiamo il label per il nome della director
         # Rimuovi i caratteri speciali che potrebbero causare problemi nel nome della directory
         safe_label = label.replace('%', 'p').replace('.', '_')
         current_temp_model_data_dir = os.path.join(TEMP_MODEL_DATA_DIR, safe_label)
